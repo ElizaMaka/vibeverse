@@ -36,12 +36,12 @@ class LoginView(APIView):
             raise AuthenticationFailed('Incorrect password!')
         
         refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token),
-        refresh_token = str(refresh),
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
 
         response = Response({
             'access_token': access_token,
-            'refresh_token':refresh_token,
+            'refresh_token': refresh_token,
         })
         response.set_cookie(key='access_token', value=access_token, httponly=True, samesite='None', secure=True)
         response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, samesite='None', secure=True)
