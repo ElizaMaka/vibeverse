@@ -1,0 +1,82 @@
+from rest_framework import serializers
+from django.db import transaction
+
+from .models import User, Profile
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'username']
+        extra_kwargs = {
+            'password': {'write_only':True}
+        }
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = User.objects.create(
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+        )
+        user.username = f"{validated_data['first_name']}_{validated_data['last_name']}".lower()
+        user.set_password(password)
+        user.save()
+        return user
+
+class ProfileSerializer(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = "__all__"
+    
+    def get_following(self, obj):
+        user = self.context['request'].user
+        return Profile.objects.filter(followers=user).values_list('user__id', flat=True)
+
+class ProfileSetUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = "__all__"
+        read_only_fields = ['user', 'followers']
+        
+class UserUpdateSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile']
+        extra_kwargs = {
+            'password': {'write_only':True}
+        }
+    
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('profile', None)
+        print(profile_data)
+
+        if profile_data:
+            profile_instance = instance.profile
+            followers = profile_data.pop('followers', None)
+            if followers is not None:
+                profile_instance.followers.set(followers)
+            for attr, value in profile_data.items():
+                setattr(profile_instance, attr, value)
+            profile_instance.save()
+        
+        for attr, value in validated_data.items():
+            if attr == 'password':
+                instance.set_password(value)
+            else:
+                setattr(instance, attr, value)
+        instance.save()
+
+        return instance
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile']
+        extra_kwargs = {
+            'password': {'write_only':True}
+        }
