@@ -72,12 +72,14 @@ class UserDetailViewset(viewsets.ModelViewSet):
 
 class ProfileSetUpViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSetUpSerializer
-    permission_classes = [IsAuthenticated]
     http_method_names = ['patch']
+    lookup_field = 'user_id'
+    lookup_url_kwarg = 'user_id' 
 
     def get_queryset(self):
-        return Profile.objects.filter(user=self.request.user)
-    
+        user_id = self.kwargs.get(self.lookup_url_kwarg)
+        return Profile.objects.filter(user__id=user_id)
+
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
         obj = queryset.get()
