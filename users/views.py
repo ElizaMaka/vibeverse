@@ -5,7 +5,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 
 from .serializers import UserRegisterSerializer, UserUpdateSerializer, ProfileSerializer, UserDetailSerializer, ProfileSetUpSerializer
 from .models import User, Profile
@@ -48,16 +48,13 @@ class LoginView(APIView):
 
         return response
 
-class UserUpdateViewset(viewsets.ModelViewSet):
+class UserViewset(viewsets.ModelViewSet):
     serializer_class = UserUpdateSerializer
+    queryset = User.objects.all()
     permission_classes = [IsAuthenticated]
-    http_method_names = ['patch']
-
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
-
-    def get_object(self):
-        return self.request.user
+    http_method_names = ['patch','get']
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['first_name', 'last_name', 'username', 'profile__bio', 'blogs__title']
 
 class UserDetailViewset(viewsets.ModelViewSet):
     serializer_class = UserDetailSerializer
