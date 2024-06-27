@@ -44,6 +44,7 @@ class ProfileSetUpSerializer(serializers.ModelSerializer):
         
 class UserUpdateSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
+    blog_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -51,6 +52,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only':True}
         }
+    
+    def get_blog_count(self, obj):
+        return obj.blogs.count()
     
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', None)
