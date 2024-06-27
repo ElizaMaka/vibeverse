@@ -41,9 +41,21 @@ class ProfileSetUpSerializer(serializers.ModelSerializer):
         model = Profile
         fields = "__all__"
         read_only_fields = ['user', 'followers']
-        
+
+class ProfileDetailSerializer(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = "__all__"
+    
+    def get_following(self, obj):
+        user = self.context['user']
+        return Profile.objects.filter(followers=user).values_list('user__id', flat=True)
+
+
 class UserUpdateSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+    profile = serializers.SerializerMethodField()
     blog_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -52,7 +64,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only':True}
         }
-    
+
+    def get_profile(self, obj):
+        profile = Profile.objects.get(user=obj.id)
+        return ProfileDetailSerializer(profile, context={'user':obj.id}).data
+
     def get_blog_count(self, obj):
         return obj.blogs.count()
     
@@ -79,7 +95,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+    profile = ProfileDetailSerializer()
     blog_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -88,6 +104,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only':True}
         }
+    
+    def get_profile(self, obj):
+        profile = Profile.objects.get(user=obj.id)
+        return ProfileDetailSerializer(profile, context={'user':obj.id}).data
     
     def get_blog_count(self, obj):
         return obj.blogs.count()
