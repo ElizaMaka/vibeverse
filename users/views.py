@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import viewsets, filters
 
-from .serializers import UserRegisterSerializer, UserUpdateSerializer, ProfileSerializer, UserDetailSerializer, ProfileSetUpSerializer
+from .serializers import UserRegisterSerializer, UserUpdateSerializer, UserDetailSerializer, ProfileSetUpSerializer
 from .models import User, Profile
 
 # Create your views here.
