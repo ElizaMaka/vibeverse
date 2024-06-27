@@ -102,3 +102,31 @@ class FollowUserView(APIView):
         profile_to_follow.save() 
 
         return Response(data={"message":"following"}, status=status.HTTP_204_NO_CONTENT)
+
+class UnfollowUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_to_unfollow_id = request.data.get('user_to_unfollow_id')
+        if not user_to_unfollow_id:
+            return Response({"error": "user_to_unfollow_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user_to_follow = User.objects.get(pk=user_to_unfollow_id)
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+        profile_to_unfollow = get_object_or_404(Profile, user=user_to_follow)
+
+        if request.user not in profile_to_unfollow.followers.all():
+            return Response({"error": "You are not following this user"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        profile_to_unfollow.followers.remove(request.user)
+        profile_to_unfollow.save() 
+
+        return Response(data={"message":"unfollowing"}, status=status.HTTP_204_NO_CONTENT)
+    
+        
+
+
+
