@@ -3,6 +3,8 @@ from django.db import transaction
 
 from .models import User, Profile
 
+from blog.models import Blog
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -74,9 +76,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
+    blog_count = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile', 'blog_count']
         extra_kwargs = {
             'password': {'write_only':True}
         }
+    
+    def get_blog_count(self, obj):
+        return obj.blogs.count()
