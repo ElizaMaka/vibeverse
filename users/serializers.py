@@ -25,17 +25,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class ProfileDetailSerializer(serializers.ModelSerializer):
-    following = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Profile
-        fields = "__all__"
-    
-    def get_following(self, obj):
-        user = self.context['request'].user
-        return Profile.objects.filter(followers=user).values_list('user__id', flat=True)
-
 class ProfileSetUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
@@ -43,15 +32,15 @@ class ProfileSetUpSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'followers']
 
 class ProfileSerializer(serializers.ModelSerializer):
-    following = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
         fields = "__all__"
     
-    def get_following(self, obj):
-        user = self.context['user']
-        return Profile.objects.filter(followers=user).values_list('user__id', flat=True)
+    def get_followers_count(self, obj):
+        user = obj.user
+        return Profile.objects.filter(followings=user).values_list('user__id', flat=True).count()
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -64,10 +53,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only':True}
         }
-
-    def get_profile(self, obj):
-        profile = Profile.objects.get(user=obj.id)
-        return ProfileSerializer(profile, context={'user':obj.id}).data
 
     def get_blog_count(self, obj):
         return obj.blogs.count()
@@ -95,7 +80,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    profile = ProfileDetailSerializer()
+    profile = ProfileSerializer()
     blog_count = serializers.SerializerMethodField()
 
     class Meta:

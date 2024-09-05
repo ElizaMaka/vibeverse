@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import RegisterView, LoginView, UserViewset, FollowUserView, UserDetailViewset, ProfileSetUpViewSet, UnfollowUserView
+from .views import RegisterView, LoginView, UserViewset, follow_user, UserDetailViewset, ProfileSetUpViewSet, unfollow_user, followers, followings
 
 router = DefaultRouter()
 router.register(r'register', RegisterView, basename='register')
@@ -12,6 +12,8 @@ router.register(r'user/profile-setup', ProfileSetUpViewSet, basename='user.profi
 urlpatterns = [
     path('', include(router.urls)),
     path('login/', LoginView.as_view()),
-    path('follow/', FollowUserView.as_view()),
-    path('unfollow/', UnfollowUserView.as_view()),
+    path('follow/', follow_user),
+    path('unfollow/', unfollow_user),
+    path('followers/',followers ),
+    path('followings/',followings ),
 ]

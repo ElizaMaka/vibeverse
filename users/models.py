@@ -18,7 +18,7 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     interests = models.CharField(max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(upload_to='users/profile_picture', blank=True, null=True)
-    followers = models.ManyToManyField(User, related_name='following', blank=True)
+    followings = models.ManyToManyField(User, related_name='followers', blank=True)
 
     def __str__(self) -> str:
         return self.user.email
