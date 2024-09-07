@@ -44,7 +44,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField()
+    profile = ProfileSerializer()
     blog_count = serializers.SerializerMethodField()
 
     class Meta:

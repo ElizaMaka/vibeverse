@@ -2,6 +2,8 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import ValidationError
 
 from .models import Blog
 from .serializers import BlogSerializer
@@ -13,9 +15,6 @@ class BlogViewSet(viewsets.ModelViewSet):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
     permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
     def get_queryset(self):
         return Blog.objects.filter(user=self.request.user)
@@ -52,3 +51,13 @@ class AllBlogsViewSet(viewsets.ReadOnlyModelViewSet):
             raise NotFound(detail=f"User with id {user_id} does not exist.")
         
         return Blog.objects.filter(user=user)
+
+class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = BlogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        followings = user.profile.followings.all()
+        followings_blogs = Blog.objects.filter(user__in=followings)
+        return followings_blogs

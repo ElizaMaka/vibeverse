@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import environ
+
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -57,6 +60,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+# CSRF_TRUSTED_ORIGINS=env.list("CORS_ALLOWED_ORIGINS")
+# CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS")
+# CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
 
 ROOT_URLCONF = 'diary.urls'
 

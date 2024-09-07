@@ -1,21 +1,30 @@
 from rest_framework import serializers
 
 from .models import Blog, BlogImage
+from users.models import User
 
 class BlogImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogImage
         fields = ['image']
 
+class DetailUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'username']
+
 class BlogSerializer(serializers.ModelSerializer):
+    user = DetailUserSerializer(read_only=True)
     images = BlogImageSerializer(required=False, many=True)
 
     class Meta:
         model = Blog
         fields = '__all__'
         read_only_fields = ['user']
-
+    
     def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['user'] = request.user
         images = validated_data.pop('images')
         blog = Blog.objects.create(**validated_data)
         for image_data in images:

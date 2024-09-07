@@ -8,6 +8,7 @@ class Blog(models.Model):
     title = models.CharField(max_length=255)
     sub_title = models.TextField(null=True, blank=True)
     content = models.TextField()
+    likes = models.ManyToManyField(User)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -16,3 +17,4 @@ class BlogImage(models.Model):
     image = models.ImageField(upload_to='blog/images/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
