@@ -7,8 +7,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Blog
-from .serializers import BlogSerializer
+from .models import Blog, BlogReview
+from .serializers import BlogReviewSerializer, BlogSerializer
 
 from users.models import User
 
@@ -95,3 +95,27 @@ def unlike_blogs(request, blog_id):
     blog.likes.remove(user)
     blog.save()
     return Response({"message": "unliked"}, status=status.HTTP_200_OK)
+
+class AddBlogReviewViewSet(viewsets.ModelViewSet):
+    queryset = BlogReview.objects.all()
+    serializer_class = BlogReviewSerializer
+    permission_classes = [IsAuthenticated]
+
+class ViewBlogReviewsViewSet(viewsets.ModelViewSet):
+    queryset = BlogReview.objects.all()
+    serializer_class = BlogReviewSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get']
+
+    def list(self, request, *args, **kwargs):
+        blog_id = request.query_params.get('blog_id')
+
+        try:
+            blog = Blog.objects.get(id=blog_id)
+        except Blog.DoesNotExist:
+            raise ValidationError({"message":"Invalid Blog id"})
+        
+
+        reviews = BlogReview.objects.filter(blog=blog)
+        serializer = BlogReviewSerializer(reviews, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Blog, BlogImage
+from .models import Blog, BlogImage, BlogReview
 from users.models import User
 
 class BlogImageSerializer(serializers.ModelSerializer):
@@ -16,6 +16,11 @@ class DetailUserSerializer(serializers.ModelSerializer):
 class BlogSerializer(serializers.ModelSerializer):
     user = DetailUserSerializer(read_only=True)
     images = BlogImageSerializer(required=False, many=True)
+    reviews_count = serializers.SerializerMethodField()
+
+    def get_reviews_count(self, obj):
+        reviews = obj.reviews.all()
+        return reviews.count()
 
     class Meta:
         model = Blog
@@ -44,3 +49,15 @@ class BlogSerializer(serializers.ModelSerializer):
                 
         instance.save()
         return instance
+
+class BlogReviewSerializer(serializers.ModelSerializer):
+    reviewer = DetailUserSerializer(read_only=True)
+    class Meta:
+        model = BlogReview
+        fields = "__all__"
+        read_only_fields = ['reviewer']
+    
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['reviewer'] = request.user
+        return super().create(validated_data)

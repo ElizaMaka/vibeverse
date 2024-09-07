@@ -138,7 +138,7 @@ def followers(request):
             data.append(serializer.data)
         return Response(data)
     
-    return Response({"message": "No followers."}, status=status.HTTP_404_NOT_FOUND)
+    return Response([], status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -150,7 +150,7 @@ def followings(request):
         serializer = UserDetailSerializer(followings, many=True)
         return Response(serializer.data)
     
-    return Response({"message": "Non following."}, status=status.HTTP_404_NOT_FOUND)
+    return Response([], status=status.HTTP_200_OK)
 
 
 
