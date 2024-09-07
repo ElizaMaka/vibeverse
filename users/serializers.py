@@ -3,6 +3,8 @@ from django.db import transaction
 
 from .models import User, Profile
 
+from blog.models import Blog
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -23,32 +25,37 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class ProfileSerializer(serializers.ModelSerializer):
-    following = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Profile
-        fields = "__all__"
-    
-    def get_following(self, obj):
-        user = self.context['request'].user
-        return Profile.objects.filter(followers=user).values_list('user__id', flat=True)
-
 class ProfileSetUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = "__all__"
         read_only_fields = ['user', 'followers']
-        
+
+class ProfileSerializer(serializers.ModelSerializer):
+    followers_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = "__all__"
+    
+    def get_followers_count(self, obj):
+        user = obj.user
+        return Profile.objects.filter(followings=user).values_list('user__id', flat=True).count()
+
+
 class UserUpdateSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+    profile = serializers.SerializerMethodField()
+    blog_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile', 'blog_count']
         extra_kwargs = {
             'password': {'write_only':True}
         }
+
+    def get_blog_count(self, obj):
+        return obj.blogs.count()
     
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', None)
@@ -74,9 +81,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
+    blog_count = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile', 'blog_count']
         extra_kwargs = {
             'password': {'write_only':True}
         }
+    
+    def get_blog_count(self, obj):
+        return obj.blogs.count()
