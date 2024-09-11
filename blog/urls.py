@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import BlogViewSet, RecentBlogsViewSet, AllBlogsViewSet, FeedBlogsViewSet, like_blogs, unlike_blogs, AddBlogReviewViewSet, ViewBlogReviewsViewSet
+from .views import BlogViewSet, RecentBlogsViewSet, AllBlogsViewSet, FeedBlogsViewSet, like_blogs, unlike_blogs, AddBlogReviewViewSet, ViewBlogReviewsViewSet, YouMayLikeBlogViewSet
 
 router = DefaultRouter()
 router.register(r'blog', BlogViewSet, basename='blog')
@@ -10,6 +10,7 @@ router.register(r'all', AllBlogsViewSet, basename='all')
 router.register('feed-blogs', FeedBlogsViewSet, basename='feed_blogs')
 router.register('add-review', AddBlogReviewViewSet, basename='add-review')
 router.register('view-review', ViewBlogReviewsViewSet, basename='view-review')
+router.register('you-may-like', YouMayLikeBlogViewSet)
 
 urlpatterns = [
     path('like/<blog_id>/', like_blogs),

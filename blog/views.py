@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Count, Q
 
 from .models import Blog, BlogReview
 from .serializers import BlogReviewSerializer, BlogSerializer
@@ -119,3 +120,20 @@ class ViewBlogReviewsViewSet(viewsets.ModelViewSet):
         reviews = BlogReview.objects.filter(blog=blog)
         serializer = BlogReviewSerializer(reviews, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class YouMayLikeBlogViewSet(viewsets.ModelViewSet):
+    queryset = Blog.objects.all()
+    serializer_class = BlogSerializer
+    http_method_names = ['get']
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_interests = self.request.user.profile.interests
+        if user_interests:
+            user_interests = user_interests.split(',') 
+            return (
+                Blog.objects.filter(tags__tag__in=user_interests)
+                .annotate(matching_tags_count=Count('tags', filter=Q(tags__tag__in=user_interests)))
+                .order_by('-matching_tags_count')[:5]
+            )
+        return None
