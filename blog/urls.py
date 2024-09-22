@@ -7,10 +7,10 @@ router = DefaultRouter()
 router.register(r'blog', BlogViewSet, basename='blog')
 router.register(r'recent', RecentBlogsViewSet, basename='recent')
 router.register(r'all', AllBlogsViewSet, basename='all')
-router.register('feed-blogs', FeedBlogsViewSet, basename='feed_blogs')
+router.register('feed-blogs', FeedBlogsViewSet, basename='feed-blogs')
 router.register('add-review', AddBlogReviewViewSet, basename='add-review')
 router.register('view-review', ViewBlogReviewsViewSet, basename='view-review')
-router.register('you-may-like', YouMayLikeBlogViewSet)
+router.register('you-may-like', YouMayLikeBlogViewSet, basename='you-may-like')
 
 urlpatterns = [
     path('like/<blog_id>/', like_blogs),
