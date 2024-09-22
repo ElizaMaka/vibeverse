@@ -20,7 +20,6 @@ class BlogTagSerializer(serializers.ModelSerializer):
 
 class BlogSerializer(serializers.ModelSerializer):
     user = DetailUserSerializer(read_only=True)
-    images = BlogImageSerializer(required=False, many=True)
     tags = BlogTagSerializer(required=False, many=True)
 
     reviews_count = serializers.SerializerMethodField()
@@ -48,8 +47,7 @@ class BlogSerializer(serializers.ModelSerializer):
         blog = Blog.objects.create(**validated_data)
 
         if images:
-            for image_data in images:
-                BlogImage.objects.create(blog=blog, image=image_data['image'])
+            blog.images.set(images)
         
         if tags:
             for tag in tags:
@@ -67,9 +65,8 @@ class BlogSerializer(serializers.ModelSerializer):
 
         if images_data:
             instance.images.all().delete()
-            for image_data in images_data:
-                BlogImage.objects.create(blog=instance, image=image_data['image'])
-        
+            instance.images.set(images_data)
+
         if tags:
             instance.tags.all().delete()
             for tag in tags:

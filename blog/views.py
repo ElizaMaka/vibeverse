@@ -8,12 +8,17 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count, Q
 
-from .models import Blog, BlogReview
-from .serializers import BlogReviewSerializer, BlogSerializer
+from .models import Blog, BlogImage, BlogReview
+from .serializers import BlogImageSerializer, BlogReviewSerializer, BlogSerializer
 
 from users.models import User
 
 # Create your views here.
+class BlogImageViewSet(viewsets.ModelViewSet):
+    queryset = BlogImage.objects.all()
+    serializer_class = BlogImageSerializer
+    permission_classes = [IsAuthenticated]
+
 class BlogViewSet(viewsets.ModelViewSet):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
