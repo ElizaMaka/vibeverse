@@ -16,9 +16,10 @@ class DetailUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile_pic']
     
     def get_profile_pic(self, obj):
+        request = self.context.get('request')
         pp = obj.profile.profile_picture
         if pp:
-            return pp
+            return request.build_absolute_uri(pp.url)
         return None
 
 class BlogTagSerializer(serializers.ModelSerializer):
