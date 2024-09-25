@@ -9,9 +9,17 @@ class BlogImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 class DetailUserSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'username']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile_pic']
+    
+    def get_profile_pic(self, obj):
+        pp = obj.profile.profile_picture
+        if pp:
+            return pp
+        return None
 
 class BlogTagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,7 +27,6 @@ class BlogTagSerializer(serializers.ModelSerializer):
         fields = ['id', 'tag']
 
 class BlogSerializer(serializers.ModelSerializer):
-    user = DetailUserSerializer(read_only=True)
     tags = BlogTagSerializer(required=False, many=True)
 
     reviews_count = serializers.SerializerMethodField()
@@ -45,6 +52,7 @@ class BlogSerializer(serializers.ModelSerializer):
         image_serializer = BlogImageSerializer(instance.images.all(), many=True, context={'request': request})
         data['images'] = [image_data['image'] for image_data in image_serializer.data]
 
+        data['user'] = DetailUserSerializer(instance.user, read_only=True, context={'request': request}).data
         return data
     
     def create(self, validated_data):
@@ -85,11 +93,16 @@ class BlogSerializer(serializers.ModelSerializer):
         return instance
 
 class BlogReviewSerializer(serializers.ModelSerializer):
-    reviewer = DetailUserSerializer(read_only=True)
     class Meta:
         model = BlogReview
         fields = "__all__"
         read_only_fields = ['reviewer']
+    
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        data = super().to_representation(instance)
+        data['reviewer'] = DetailUserSerializer(instance.reviewer, read_only=True, context={'request': request}).data
+        return data
     
     def create(self, validated_data):
         request = self.context.get('request')
