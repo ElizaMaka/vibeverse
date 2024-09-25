@@ -38,6 +38,15 @@ class BlogSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user', 'likes']
     
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        data = super().to_representation(instance)
+
+        image_serializer = BlogImageSerializer(instance.images.all(), many=True, context={'request': request})
+        data['images'] = [image_data['image'] for image_data in image_serializer.data]
+
+        return data
+    
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['user'] = request.user
