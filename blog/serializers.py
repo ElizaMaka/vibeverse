@@ -99,6 +99,13 @@ class BlogReviewSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ['reviewer']
     
+    def validate(self, attrs):
+        request = self.context.get('request')
+        reviewer = request.user
+        if BlogReview.objects.filter(blog=attrs.get('blog'), reviewer=reviewer).exists():
+            raise serializers.ValidationError({'message':'Review already exists.'})
+        return super().validate(attrs)
+    
     def to_representation(self, instance):
         request = self.context.get('request')
         data = super().to_representation(instance)
