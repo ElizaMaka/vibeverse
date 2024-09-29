@@ -7,6 +7,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count, Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 
 from .models import Blog, BlogImage, BlogReview
 from .serializers import BlogImageSerializer, BlogReviewSerializer, BlogSerializer
@@ -23,9 +25,9 @@ class BlogViewSet(viewsets.ModelViewSet):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
     permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Blog.objects.filter(user=self.request.user)
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['user']
+    search_fields = [ 'title', 'tags__tag']
 
 
 class RecentBlogsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -43,22 +45,6 @@ class RecentBlogsViewSet(viewsets.ReadOnlyModelViewSet):
             raise NotFound(detail=f"User with id {user_id} does not exist.")
         
         return Blog.objects.filter(user=user).order_by('-created_at')[:5]
-
-class AllBlogsViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = BlogSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user_id = self.request.query_params.get('user_id')
-        if user_id is None:
-            raise NotFound(detail="user_id parameter is required.")
-        
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            raise NotFound(detail=f"User with id {user_id} does not exist.")
-        
-        return Blog.objects.filter(user=user)
 
 class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BlogSerializer
