@@ -70,7 +70,6 @@ class ProfileSetUpViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSetUpSerializer
     http_method_names = ['patch']
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Profile.objects.filter(user__id=self.request.user.id)
