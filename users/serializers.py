@@ -6,12 +6,17 @@ from .models import User, Profile
 from blog.models import Blog
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'username']
+        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'username', 'profile']
         extra_kwargs = {
             'password': {'write_only':True}
         }
+    
+    def get_profile(self, obj):
+        return obj.profile.id
     
     def create(self, validated_data):
         password = validated_data.pop('password', None)
