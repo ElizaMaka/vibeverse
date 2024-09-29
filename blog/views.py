@@ -11,7 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from itertools import chain
 
-from .models import Blog, BlogImage, BlogReview
+from .models import Blog, BlogImage, BlogReview, BlogTag
 from .serializers import BlogImageSerializer, BlogReviewSerializer, BlogSerializer
 
 from users.models import User
@@ -101,3 +101,10 @@ class YouMayLikeBlogViewSet(viewsets.ModelViewSet):
                 .order_by('-matching_tags_count')[:5]
             )
         return None
+
+from rest_framework.response import Response
+@api_view(['GET'])
+def popular_tags(request):
+    tags = BlogTag.objects.annotate(tag_count=Count('blog')).order_by('-tag_count')[:10]
+    popular_tags = {tag['tag'] for tag in tags.values('tag')}
+    return Response(popular_tags)
