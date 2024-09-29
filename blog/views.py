@@ -11,6 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from itertools import chain
 
+from blog.filters import TagFilter
+
 from .models import Blog, BlogImage, BlogReview, BlogTag
 from .serializers import BlogImageSerializer, BlogReviewSerializer, BlogSerializer
 
@@ -36,15 +38,14 @@ class BlogViewSet(viewsets.ModelViewSet):
 class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BlogSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TagFilter
 
     def get_queryset(self):
         user = self.request.user
         followings = user.profile.followings.all()
-
-        my_recent = Blog.objects.filter(user=user).order_by('-created_at')[:1]
         following_blogs = Blog.objects.filter(user__in=followings)
-        blogs = list(chain(my_recent, following_blogs))
-        return blogs
+        return following_blogs
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated]) 
