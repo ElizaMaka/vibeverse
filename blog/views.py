@@ -9,6 +9,7 @@ from rest_framework import status
 from django.db.models import Count, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
+from itertools import chain
 
 from .models import Blog, BlogImage, BlogReview
 from .serializers import BlogImageSerializer, BlogReviewSerializer, BlogSerializer
@@ -29,22 +30,8 @@ class BlogViewSet(viewsets.ModelViewSet):
     filterset_fields = ['user']
     search_fields = [ 'title', 'tags__tag']
 
-
-class RecentBlogsViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = BlogSerializer
-    permission_classes = [IsAuthenticated]
-
     def get_queryset(self):
-        user_id = self.request.query_params.get('user_id')
-        if user_id is None:
-            raise NotFound(detail="user_id parameter is required.")
-        
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            raise NotFound(detail=f"User with id {user_id} does not exist.")
-        
-        return Blog.objects.filter(user=user).order_by('-created_at')[:5]
+        return Blog.objects.all().order_by('-created_at')
 
 class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BlogSerializer
@@ -53,8 +40,11 @@ class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         user = self.request.user
         followings = user.profile.followings.all()
-        followings_blogs = Blog.objects.filter(user__in=followings)
-        return followings_blogs
+
+        my_recent = Blog.objects.filter(user=user).order_by('-created_at')[:1]
+        following_blogs = Blog.objects.filter(user__in=followings)
+        blogs = list(chain(my_recent, following_blogs))
+        return blogs
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated]) 
@@ -92,25 +82,8 @@ class AddBlogReviewViewSet(viewsets.ModelViewSet):
     queryset = BlogReview.objects.all()
     serializer_class = BlogReviewSerializer
     permission_classes = [IsAuthenticated]
-
-class ViewBlogReviewsViewSet(viewsets.ModelViewSet):
-    queryset = BlogReview.objects.all()
-    serializer_class = BlogReviewSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ['get']
-
-    def list(self, request, *args, **kwargs):
-        blog_id = request.query_params.get('blog_id')
-
-        try:
-            blog = Blog.objects.get(id=blog_id)
-        except Blog.DoesNotExist:
-            raise ValidationError({"message":"Invalid Blog id"})
-        
-
-        reviews = BlogReview.objects.filter(blog=blog)
-        serializer = BlogReviewSerializer(reviews, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['blog']
 
 class YouMayLikeBlogViewSet(viewsets.ModelViewSet):
     queryset = Blog.objects.all()

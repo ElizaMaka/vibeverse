@@ -27,6 +27,30 @@ class BlogTagSerializer(serializers.ModelSerializer):
         model = BlogTag
         fields = ['id', 'tag']
 
+class BlogReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogReview
+        fields = "__all__"
+        read_only_fields = ['reviewer']
+    
+    def validate(self, attrs):
+        request = self.context.get('request')
+        reviewer = request.user
+        if BlogReview.objects.filter(blog=attrs.get('blog'), reviewer=reviewer).exists():
+            raise serializers.ValidationError({'message':'Review already exists.'})
+        return super().validate(attrs)
+    
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        data = super().to_representation(instance)
+        data['reviewer'] = DetailUserSerializer(instance.reviewer, read_only=True, context={'request': request}).data
+        return data
+    
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['reviewer'] = request.user
+        return super().create(validated_data)
+
 class BlogSerializer(serializers.ModelSerializer):
     tags = BlogTagSerializer(required=False, many=True)
 
@@ -54,6 +78,12 @@ class BlogSerializer(serializers.ModelSerializer):
         data['images'] = [image_data['image'] for image_data in image_serializer.data]
 
         data['user'] = DetailUserSerializer(instance.user, read_only=True, context={'request': request}).data
+
+        reviews = instance.reviews.all()
+        if reviews.exists():
+            data['reviews'] = list(reviews.values_list('id', flat=True))
+        else:
+             data['reviews'] =  []
         return data
     
     def create(self, validated_data):
@@ -92,27 +122,3 @@ class BlogSerializer(serializers.ModelSerializer):
                 
         instance.save()
         return instance
-
-class BlogReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BlogReview
-        fields = "__all__"
-        read_only_fields = ['reviewer']
-    
-    def validate(self, attrs):
-        request = self.context.get('request')
-        reviewer = request.user
-        if BlogReview.objects.filter(blog=attrs.get('blog'), reviewer=reviewer).exists():
-            raise serializers.ValidationError({'message':'Review already exists.'})
-        return super().validate(attrs)
-    
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        data = super().to_representation(instance)
-        data['reviewer'] = DetailUserSerializer(instance.reviewer, read_only=True, context={'request': request}).data
-        return data
-    
-    def create(self, validated_data):
-        request = self.context.get('request')
-        validated_data['reviewer'] = request.user
-        return super().create(validated_data)
