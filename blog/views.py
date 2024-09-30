@@ -44,7 +44,7 @@ class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         user = self.request.user
         followings = user.profile.followings.all()
-        following_blogs = Blog.objects.filter(user__in=followings)
+        following_blogs = Blog.objects.filter(user__in=followings).order_by('-created_at')
         return following_blogs
 
 @api_view(['POST'])
