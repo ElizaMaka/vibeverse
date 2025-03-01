@@ -8,9 +8,14 @@ class User(AbstractUser):
     email = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     username = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    def __str__(self):
+        return self.email
 
 class Profile(models.Model):
     user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
@@ -19,6 +24,8 @@ class Profile(models.Model):
     interests = models.CharField(max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(upload_to='users/profile_picture', blank=True, null=True)
     followings = models.ManyToManyField(User, related_name='followers', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return self.user.email

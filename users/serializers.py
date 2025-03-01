@@ -5,23 +5,31 @@ from .models import User, Profile
 
 from blog.models import Blog
 
-class UserRegisterSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField()
+class UserProfileSerializer(serializers.ModelSerializer):
+    followers_count = serializers.SerializerMethodField()
+    class Meta:
+        model = Profile
+        fields = "__all__"
+        read_only_fields = ['user']
+    
+    def get_followers_count(self, obj):
+        user = obj.user
+        return Profile.objects.filter(followings=user).values_list('user__id', flat=True).count()
 
+class UserRegisterSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'username', 'profile']
+        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'username', 'profile', 'created_at', 'updated_at']
+        read_only_fields = ['username']
         extra_kwargs = {
             'password': {'write_only':True}
         }
     
-    def get_profile(self, obj):
-        return obj.profile.id
-    
     def create(self, validated_data):
         password = validated_data.pop('password', None)
         user = User.objects.create(
-            email=validated_data['email'],
+            email=validated_data['email'].lower(),
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
         )
@@ -36,26 +44,15 @@ class ProfileSetUpSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ['user', 'followers']
 
-class ProfileSerializer(serializers.ModelSerializer):
-    followers_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Profile
-        fields = "__all__"
-    
-    def get_followers_count(self, obj):
-        user = obj.user
-        return Profile.objects.filter(followings=user).values_list('user__id', flat=True).count()
-
-
-class UserUpdateSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
     blog_count = serializers.SerializerMethodField()
     followed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile', 'blog_count', 'followed']
+        fields = ['id', 'first_name', 'last_name', 'email', 'profile', 'blog_count', 'followed']
+        read_only = ['username']
         extra_kwargs = {
             'password': {'write_only':True}
         }
@@ -68,39 +65,3 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if obj in request.user.profile.followings.all():
             return True
         return False
-
-    
-    def update(self, instance, validated_data):
-        profile_data = validated_data.pop('profile', None)
-
-        if profile_data:
-            profile_instance = instance.profile
-            followers = profile_data.pop('followers', None)
-            if followers is not None:
-                profile_instance.followers.set(followers)
-            for attr, value in profile_data.items():
-                setattr(profile_instance, attr, value)
-            profile_instance.save()
-        
-        for attr, value in validated_data.items():
-            if attr == 'password':
-                instance.set_password(value)
-            else:
-                setattr(instance, attr, value)
-        instance.save()
-
-        return instance
-
-class UserDetailSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
-    blog_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'profile', 'blog_count']
-        extra_kwargs = {
-            'password': {'write_only':True}
-        }
-    
-    def get_blog_count(self, obj):
-        return obj.blogs.count()
