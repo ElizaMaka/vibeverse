@@ -135,4 +135,31 @@ class ProfileSetUpViewSet(viewsets.ModelViewSet):
 
 
 
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
+@csrf_exempt
+def logout(request):
+    # Get the refresh token from cookies
+    raw_token = request.COOKIES.get('refresh_token', None)
+
+    # Attempt to blacklist the refresh token
+    if raw_token:
+        try:
+            token = RefreshToken(raw_token.encode('utf-8'))
+            token.blacklist()
+        except Exception as e:
+            response = JsonResponse({"message": "Logout successful"}, status=status.HTTP_200_OK)
+            response.delete_cookie("access_token", path='/')
+            response.delete_cookie("refresh_token", path='/')
+            return response
+
+    # Clear session
+    request.session.flush()  # Clear session data
+
+    # Delete the cookies
+    response = JsonResponse({"message": "Logout successful"}, status=status.HTTP_200_OK)
+    response.delete_cookie("access_token", path='/')
+    response.delete_cookie("refresh_token", path='/')
+
+    return response
