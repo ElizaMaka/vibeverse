@@ -12,6 +12,7 @@ from rest_framework.filters import SearchFilter
 from itertools import chain
 
 from blog.filters import TagFilter
+from utils.pagination import StandardResultsSetPagination
 
 from .models import Blog, BlogImage, BlogReview, BlogTag
 from .serializers import BlogImageSerializer, BlogReviewSerializer, BlogSerializer
@@ -31,9 +32,10 @@ class BlogViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['user']
     search_fields = [ 'title', 'tags__tag']
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return Blog.objects.all().order_by('-created_at')
+        return Blog.objects.filter(user=self.request.user).order_by('-created_at')
 
 class FeedBlogsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BlogSerializer
