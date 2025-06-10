@@ -16,6 +16,7 @@ import os
 import environ
 
 env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +31,7 @@ SECRET_KEY = 'django-insecure-gafq=)7azdky%ctdc12w+(^fs8fgb#rmld2emgrg5s1n)@qpib
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -61,10 +62,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
-# CSRF_TRUSTED_ORIGINS=env.list("CORS_ALLOWED_ORIGINS")
-# CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS")
-# CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS=env.list("CORS_ALLOWED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS")
+CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
 
 ROOT_URLCONF = 'diary.urls'
 
@@ -165,8 +166,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS: True
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000']
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = False
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_CREDENTIALS: True
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:8000']
+# CSRF_COOKIE_SECURE = True
+# CSRF_COOKIE_HTTPONLY = False
